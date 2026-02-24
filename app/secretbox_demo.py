@@ -5,14 +5,15 @@ import argparse
 
 def get_secretbox_key():
     """Génère ou récupère une clé pour SecretBox."""
-    # Récupérer la clé depuis l'environnement (optionnel)
+    # Récupérer la clé depuis l'environnement (si définie)
     key_b64 = os.getenv("SECRETBOX_KEY")
     if key_b64:
         key = Base64Encoder.decode(key_b64.encode())
     else:
-        # Générer une nouvelle clé si aucune n'est définie
-        key = SecretBox.generate_key()
+        # Générer une nouvelle clé de 32 octets (pour SecretBox)
+        key = os.urandom(32)
         print(f"Aucune clé SECRETBOX_KEY définie. Nouvelle clé générée : {Base64Encoder.encode(key).decode()}")
+        print("Exportez-la avec `export SECRETBOX_KEY='...'` pour une utilisation future.")
     return SecretBox(key)
 
 def encrypt_file(input_path: str, output_path: str):
