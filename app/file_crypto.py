@@ -2,9 +2,16 @@ from cryptography.fernet import Fernet
 import argparse
 import os
 
-# Générer ou charger une clé (ici, on la génère à chaque exécution pour simplifier)
-key = Fernet.generate_key()
-fernet = Fernet(key)
+# Récupérer la clé depuis l'environnement ou en générer une nouvelle
+fernet_key = os.getenv("FERNET_KEY")
+if fernet_key:
+    fernet = Fernet(fernet_key.encode())
+else:
+    # Générer une clé temporaire (pour les tests locaux uniquement)
+    print("⚠️  Aucune clé FERNET_KEY définie. Génération d'une clé temporaire (non sécurisé pour la production).")
+    key = Fernet.generate_key()
+    fernet = Fernet(key)
+    print(f"Clé générée : {key.decode()}. Exportez-la avec `export FERNET_KEY='...'` pour une utilisation future.")
 
 def encrypt_file(input_path: str, output_path: str):
     with open(input_path, "rb") as f:
@@ -12,6 +19,7 @@ def encrypt_file(input_path: str, output_path: str):
     encrypted = fernet.encrypt(data)
     with open(output_path, "wb") as f:
         f.write(encrypted)
+    print(f"✅ Fichier chiffré : {output_path}")
 
 def decrypt_file(input_path: str, output_path: str):
     with open(input_path, "rb") as f:
@@ -19,6 +27,7 @@ def decrypt_file(input_path: str, output_path: str):
     decrypted = fernet.decrypt(encrypted)
     with open(output_path, "wb") as f:
         f.write(decrypted)
+    print(f"✅ Fichier déchiffré : {output_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Chiffrer/déchiffrer un fichier avec Fernet.")
@@ -29,7 +38,5 @@ if __name__ == "__main__":
 
     if args.mode == "encrypt":
         encrypt_file(args.input, args.output)
-        print(f"Fichier chiffré : {args.output}")
     else:
         decrypt_file(args.input, args.output)
-        print(f"Fichier déchiffré : {args.output}")
